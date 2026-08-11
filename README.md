@@ -11,15 +11,34 @@ The primary objective of SIG is to identify and protect critical architectural b
 - **Greedy-GIS**: A highly optimized early-stopped power iteration algorithm that bypasses full graph centrality computation, delivering a 1400× speedup over full SIG while matching its accuracy within 0.05%.
 - **Baselines**: Includes implementations of standard pruning baselines: Magnitude (L1/L2), Random, BNScale, and Taylor pruning.
 
-## Results Summary
+## Experimental Results Highlights
 
-| Method | Speedup | Accuracy Drop (%) | Pruning Time (s) |
-| --- | --- | --- | --- |
-| **SIG-CPU** | 2× | **0.60** | 277.26 |
-| **SIG-GPU** | 2× | **0.60** | 269.16 |
-| **Greedy-GIS** | 2× | **0.65** | **0.19** |
-| MagnitudeL2 | 2× | 1.00 | 0.11 |
-| Random | 2× | 2.50 | 0.004 |
+### 1. Accuracy vs. Speedup
+GIS consistently achieves the lowest accuracy drop among all competing methods at every speedup target. The **Greedy-GIS** variant performs exceptionally well, closely matching the accuracy of the full SIG approach while running orders of magnitude faster.
+
+| Method         | Speedup | Accuracy Drop (%) | Param Retention (%) | Pruning Time (s) |
+|----------------|---------|-------------------|---------------------|------------------|
+| **SIG-CPU**    | 2×      | **0.60**          | 55.7                | 277.26           |
+| **Greedy-GIS** | 2×      | **0.65**          | 62.6                | **0.19**         |
+| MagnitudeL2    | 2×      | 1.00              | 75.0                | 0.11             |
+| Random         | 2×      | 2.50              | 50.0                | 0.004            |
+| **SIG-CPU**    | 3×      | **0.80**          | 32.9                | 276.40           |
+| **Greedy-GIS** | 3×      | **0.87**          | 43.2                | **0.20**         |
+| MagnitudeL2    | 3×      | 1.33              | 66.3                | 0.01             |
+| Random         | 3×      | 3.33              | 33.5                | 0.01             |
+| **SIG-CPU**    | 4×      | **0.90**          | 25.9                | 276.14           |
+| **Greedy-GIS** | 4×      | **0.97**          | 40.6                | **0.15**         |
+| MagnitudeL2    | 4×      | 1.50              | 55.4                | 0.01             |
+| Random         | 4×      | 3.75              | 25.2                | 0.004            |
+
+### 2. Centrality Measure Selection
+The choice of centrality metric dictates both the accuracy and computation time:
+- **Eigenvector** provides the best overall accuracy drop (1.20%).
+- **PageRank** offers the best speed/accuracy trade-off, executing ~7× faster than Eigenvector with a negligible 0.05% accuracy penalty.
+- **Degree** centrality is fast but weak, failing to model global information flow.
+
+### 3. Topology-Aware Decisions
+Unlike local methods (e.g., Random, Magnitude) that prune uniformly across the network, GIS makes intelligent, polarized decisions. It completely preserves critical bottlenecks (e.g., `layer1.0.conv2` and `layer1.0.conv3` in ResNet architectures) while aggressively pruning less important layers. 
 
 **Greedy-GIS** is the recommended configuration, offering near-optimal topology-aware accuracy retention with the speed of naive local pruning methods. For a detailed breakdown of results, see `results_summary.md`.
 
